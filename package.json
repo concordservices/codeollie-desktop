@@ -1,0 +1,15 @@
+{
+  "name": "codeollie-desktop",
+  "version": "1.0.0",
+  "description": "The desktop version of CodeOllie CLI",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "concordservices",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^44.7.2"
+  }
+}
