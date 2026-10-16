@@ -16,7 +16,7 @@
             overflow: hidden;
         }
 
-        /* 📁 Left Sidebar (Project Explorer) */
+        /* 📁 Left Sidebar Panel */
         .sidebar {
             width: 250px;
             background-color: #1F1F1F;
@@ -24,13 +24,14 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
-        .sidebar h2 {
+        .sidebar-top h2 {
             font-size: 1.2em;
             margin-top: 0;
             color: #5A9EAA;
         }
-        .folder-btn {
+        .folder-btn, .settings-btn {
             background-color: #444;
             color: white;
             border: none;
@@ -39,12 +40,19 @@
             cursor: pointer;
             font-weight: bold;
             transition: background 0.3s;
+            width: 100%;
+            text-align: left;
         }
-        .folder-btn:hover {
+        .folder-btn:hover, .settings-btn:hover {
             background-color: #5A5A5A;
         }
+        .settings-btn {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            text-align: center;
+        }
 
-        /* 💬 Right Panel (Interactive AI Chat Hub) */
+        /* 💬 Right Chat Interface Hub */
         .chat-container {
             flex: 1;
             display: flex;
@@ -55,10 +63,21 @@
             background-color: #252525;
             padding: 15px 20px;
             border-bottom: 2px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .chat-header h1 {
             margin: 0;
             font-size: 1.5em;
+        }
+        .active-config-badge {
+            background-color: #444;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            color: #5A9EAA;
+            border: 1px solid #555;
         }
         .chat-messages {
             flex: 1;
@@ -77,15 +96,13 @@
         .bot {
             background-color: #444;
             align-self: flex-start;
-            border-bottom-left-radius: 2px;
         }
         .user {
             background-color: #5A9EAA;
             align-self: flex-end;
-            border-bottom-right-radius: 2px;
         }
 
-        /* ⌨️ Lower Chat Input Bar */
+        /* ⌨️ Chat Entry Input Bar */
         .chat-input-area {
             padding: 20px;
             background-color: #252525;
@@ -113,29 +130,75 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-        .send-btn:hover {
-            background-color: #72B2BE;
+
+        /* ⚙️ Configuration Settings Overlay Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-card {
+            background-color: #252525;
+            border: 2px solid #444;
+            border-radius: 8px;
+            width: 400px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .modal-card h3 { margin: 0; color: #5A9EAA; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.9em; color: #bbb; }
+        .form-group select, .form-group input {
+            background-color: #444;
+            border: 1px solid #555;
+            padding: 10px;
+            color: white;
+            border-radius: 5px;
+            outline: none;
+        }
+        .save-btn {
+            background-color: #5A9EAA;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- 📁 Sidebar panel -->
+    <!-- 📁 Sidebar Layout Menu -->
     <div class="sidebar">
-        <h2>Workspace</h2>
-        <button class="folder-btn">📂 Open Project Folder</button>
-        <p style="color: #888; font-size: 0.9em; margin-top: 20px;">No folder loaded</p>
+        <div class="sidebar-top">
+            <h2>Workspace</h2>
+            <button class="folder-btn">📂 Open Project Folder</button>
+            <p style="color: #888; font-size: 0.9em; margin-top: 20px;">No folder loaded</p>
+        </div>
+        <div class="sidebar-bottom">
+            <button class="settings-btn">⚙️ API Settings</button>
+        </div>
     </div>
 
-    <!-- 💬 Chat layout area -->
+    <!-- 💬 Live Active Conversation Column -->
     <div class="chat-container">
         <div class="chat-header">
-            <h1>CodeOllie Desktop v1.0.0</h1>
+            <h1>CodeOllie Desktop</h1>
+            <div class="active-config-badge" id="active-badge">Provider: None</div>
         </div>
         
-        <div class="chat-messages">
+        <div class="chat-messages" id="msg-box">
             <div class="message bot">
-                🤖 Hello! Welcome to the new CodeOllie GUI. Load up a folder project on the sidebar and let's start coding together!
+                🤖 Hello! Open the <b>⚙️ API Settings</b> in the bottom left corner to link your access provider key credentials!
             </div>
         </div>
 
@@ -145,5 +208,30 @@
         </div>
     </div>
 
-<script src="renderer.js"></script></body>
+    <!-- ⚙️ Dynamic API Configuration Popup Modal Overlay -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card">
+            <h3>Configure LLM Orchestration Engine</h3>
+            
+            <div class="form-group">
+                <label>Select AI Provider Model Target</label>
+                <select id="provider-select">
+                    <option value="OpenAI">OpenAI (GPT-4o-mini)</option>
+                    <option value="OpenRouter">OpenRouter (Gemini 2.5)</option>
+                    <option value="Google">Google AI Studio</option>
+                    <option value="DeepSeek">DeepSeek Coder</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Enter Secret Provider API Key Token</label>
+                <input type="password" id="api-key-input" placeholder="sk-proj-... or sk-or-...">
+            </div>
+
+            <button class="save-btn" id="save-config-btn">Save Active Config Profile</button>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
 </html>

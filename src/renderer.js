@@ -1,50 +1,81 @@
-// 🤖 CodeOllie Desktop Renderer - Handles User Actions and Chat Logic
 document.addEventListener('DOMContentLoaded', () => {
+    // Layout pointers
     const inputField = document.querySelector('.chat-input');
     const sendButton = document.querySelector('.send-btn');
     const chatMessages = document.querySelector('.chat-messages');
     const folderButton = document.querySelector('.folder-btn');
+    
+    // Dynamic settings hooks
+    const settingsBtn = document.querySelector('.settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const saveConfigBtn = document.getElementById('save-config-btn');
+    const providerSelect = document.getElementById('provider-select');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const activeBadge = document.getElementById('active-badge');
 
-    // 💬 Function to create and render a clean chat message bubble
+    // Local runtime identity space variables
+    let savedProvider = "None";
+    let savedKey = "";
+
     function appendMessage(text, sender) {
         const messageBubble = document.createElement('div');
         messageBubble.classList.add('message', sender);
-        messageBubble.innerText = text;
+        messageBubble.innerHTML = text;
         chatMessages.appendChild(messageBubble);
-        
-        // Automatically scroll down to the newest message entry
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // 🚀 Execution rule for handling message dispatching
-    function handleSendMessage() {
-        const userPrompt = inputField.value.trim();
-        if (userPrompt === '') return; // Skip execution if the box is blank
+    // ⚙️ Modal Open / Close operations
+    settingsBtn.addEventListener('click', () => {
+        settingsModal.style.visibility = 'visible';
+        settingsModal.style.opacity = '1';
+    });
 
-        // 1. Render user message bubble on the right side
-        appendMessage(userPrompt, 'user');
-        inputField.value = ''; // Clean the input text string box
+    saveConfigBtn.addEventListener('click', () => {
+        savedProvider = providerSelect.value;
+        savedKey = apiKeyInput.value.trim();
 
-        // 2. Simulate an automatic AI confirmation response bubble on the left
-        setTimeout(() => {
-            appendMessage("🤖 Thinking... Connecting to your configured local LLM provider engine context profile.", "bot");
-        }, 600);
-    }
+        if(savedKey !== "") {
+            activeBadge.innerText = `Provider: ${savedProvider}`;
+            appendMessage(`⚙️ <b>System Profile Loaded:</b> Switched active workspace pipeline engine targets to use <b>${savedProvider}</b> dynamically.`, "bot");
+        }
+        
+        // Hide the layout pop-up card window view overlay context
+        settingsModal.style.visibility = 'hidden';
+        settingsModal.style.opacity = '0';
+    });
 
-    // 🖱️ Wire up interactive event listeners for clicks and keypresses
-    sendButton.addEventListener('click', handleSendMessage);
-    
-    inputField.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            handleSendMessage();
+    // Close modal if user clicks outside the inner card window grid bounding zone boundary
+    settingsModal.addEventListener('click', (e) => {
+        if(e.target === settingsModal) {
+            settingsModal.style.visibility = 'hidden';
+            settingsModal.style.opacity = '0';
         }
     });
 
-    // 📂 Visual indicator for folder opening selections
+    function handleSendMessage() {
+        const userPrompt = inputField.value.trim();
+        if (userPrompt === '') return;
+
+        appendMessage(userPrompt, 'user');
+        inputField.value = '';
+
+        setTimeout(() => {
+            if(savedKey === "") {
+                appendMessage("❌ <b>Authentication Alert:</b> Please launch your <b>⚙️ API Settings</b> tab and append a valid API key token string sequence before invoking code prompts.", "bot");
+            } else {
+                appendMessage(`🤖 <b>Thinking...</b> Routing your file generation instruction request packet straight into the active <b>${savedProvider}</b> pipeline stream execution framework.`, "bot");
+            }
+        }, 600);
+    }
+
+    sendButton.addEventListener('click', handleSendMessage);
+    inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendMessage(); });
+
     folderButton.addEventListener('click', () => {
         const statusText = document.querySelector('.sidebar p');
         statusText.innerText = "📁 Loaded: codeollie-desktop";
         statusText.style.color = "#5A9EAA";
-        appendMessage("📁 System Node: Connected workspace target folder environment path successfully.", "bot");
+        appendMessage("📁 Connected workspace folder repository profile path target context environment.", "bot");
     });
 });
